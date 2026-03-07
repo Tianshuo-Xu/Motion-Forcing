@@ -23,7 +23,7 @@ Usage:
     # Load from HuggingFace Hub (recommended)
     python gradio_demo.py \\
         --model_path THUDM/CogVideoX-5b-I2V \\
-        --transformer_ckpt TSXu/driving_forcing_80k
+        --transformer_ckpt TSXu/MotionForcing_driving
 
     # Load with DeepSpeed checkpoint
     python gradio_demo.py \\
@@ -1356,7 +1356,7 @@ def generate_video(
     generator = torch.Generator(device="cpu").manual_seed(seed)
 
     # Load cached prompt embeddings instead of using raw string prompt
-    embeds_path = os.path.join(os.path.dirname(__file__), "prompt_embeds.pt")
+    embeds_path = os.path.join(os.path.dirname(__file__), "models", "prompt_embeds.pt")
     if os.path.exists(embeds_path):
         cached_embeds = torch.load(embeds_path)
         prompt_embeds = cached_embeds["prompt_embeds"].to(pipe.device, dtype=pipe.transformer.dtype)
@@ -1734,16 +1734,13 @@ def create_demo(pipe, yolo_model, depth_model, vggt_model, device, dtype):
     # ── Layout ───────────────────────────────────────────────────────────
 
     with gr.Blocks(
-        title="Motion Dreamer Demo",
+        title="Motion Forcing Demo",
         theme=gr.themes.Soft(),
     ) as demo:
         gr.Markdown(
-            "# Motion Dreamer: Point -> Shape -> Appearance\n"
+            "# Motion Forcing: Point -> Shape -> Appearance\n"
             "Upload an image, select an object, draw a motion arrow, "
-            "and generate a video.\n\n"
-            "**Workflow:** Upload image -> YOLO segments objects -> "
-            "Click to select & define motion -> Generate two-stage video "
-            "(segmentation + RGB)"
+            "and generate a video."
         )
 
         # ── Hidden states ──
@@ -1757,89 +1754,63 @@ def create_demo(pipe, yolo_model, depth_model, vggt_model, device, dtype):
         st_conditions = gr.State(None)
         st_cam_waypoints = gr.State([])
 
+        # ── Row 1: Stage 1 / Stage 2 / Stage 3 ──
         with gr.Row():
-            # ── Left: input & visualisation ──
-            with gr.Column(scale=2):
-                gr.Markdown("### Step 1: Upload Image")
+            # Stage 1
+            with gr.Column(scale=1):
+                gr.Markdown("### Stage 1: Upload Image")
                 inp_image = gr.Image(type="pil", label="Input Image", height=280)
+                flow_preview = gr.Image(label="Circle Motion Preview", height=200)
 
+            # Stage 2
+            with gr.Column(scale=1):
                 gr.Markdown(
-                    "### Step 2: Annotate Object Motion\n"
+                    "### Stage 2: Annotate Object Motion\n"
                     "**1st click** on an object = select it.  \n"
-                    "**Subsequent clicks** = add waypoints (curve).  \n"
-                    "**Finish Annotation** = confirm & start next object."
+                    "**Subsequent clicks** = add waypoints (curve)."
                 )
                 display_seg = gr.Image(
                     label="Segmentation (click here)",
                     interactive=False, height=360,
                 )
-                status_text = gr.Textbox(
-                    label="Status", interactive=False,
-                    value="Upload an image to begin.",
-                )
                 with gr.Row():
-                    btn_finish = gr.Button(
-                        "Finish Annotation", variant="primary",
-                    )
+                    btn_finish = gr.Button("Next Object", variant="primary")
                     btn_reset = gr.Button("Reset All", variant="secondary")
-                flow_preview = gr.Image(label="Circle Motion Preview", height=200)
 
-            # ── Middle: camera motion ──
-            with gr.Column(scale=2):
+            # Stage 3
+            with gr.Column(scale=1):
                 gr.Markdown(
-                    "### Step 3: Camera Motion\n"
+                    "### Stage 3: Camera Motion\n"
                     "Click on the canvas to draw the ego-vehicle trajectory.  \n"
-                    "**Up** = forward, **Left/Right** = lateral.  \n"
-                    "Green dot = current position. Multi-segment path supported."
+                    "**Up** = forward, **Left/Right** = lateral."
                 )
                 display_cam = gr.Image(
                     label="Camera Path (click to add waypoints)",
                     interactive=False, height=360,
                 )
-                cam_status = gr.Textbox(
-                    label="Camera Path", interactive=False,
-                    value="No camera path. Default forward motion will be used.",
-                )
                 with gr.Row():
                     btn_cam_undo = gr.Button("Undo Last", variant="secondary")
                     btn_cam_reset = gr.Button("Reset Camera", variant="secondary")
 
-                with gr.Accordion("Ego Speed Profile", open=False):
-                    gr.Markdown(
-                        "Adjust relative speed at each keyframe "
-                        "(1.0 = normal, <1 = slower, >1 = faster)."
-                    )
-                    with gr.Row():
-                        spd_0 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="Start")
-                        spd_1 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="20%")
-                        spd_2 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="40%")
-                    with gr.Row():
-                        spd_3 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="60%")
-                        spd_4 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="80%")
-                        spd_5 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
-                                          label="End")
+        # Hidden status outputs (still needed for event wiring)
+        status_text = gr.Textbox(visible=False, value="Upload an image to begin.")
+        cam_status = gr.Textbox(
+            visible=False,
+            value="No camera path. Default forward motion will be used.",
+        )
 
-            # ── Right: controls ──
-            with gr.Column(scale=2):
+        # ── Row 2: Step 4 Parameters (left) + Advanced Ego Speed (right) ──
+        with gr.Row():
+            with gr.Column(scale=3):
                 gr.Markdown("### Step 4: Parameters")
+                paths_info = gr.Textbox(
+                    label="Defined Paths",
+                    value="No paths defined.",
+                    interactive=False, lines=3,
+                )
+                arrow_scale = gr.State(1.0)
+                num_frames = gr.State(66)
                 with gr.Row():
-                    paths_info = gr.Textbox(
-                        label="Defined Paths",
-                        value="No paths defined.",
-                        interactive=False, lines=3,
-                    )
-                    arrow_scale = gr.Slider(
-                        0.1, 5.0, value=1.0, step=0.1, label="Arrow Scale",
-                    )
-                with gr.Row():
-                    num_frames = gr.Slider(
-                        10, 100, value=66, step=2, label="Num Frames (depth+RGB)",
-                    )
                     num_steps = gr.Slider(
                         5, 50, value=20, step=1, label="Inference Steps",
                     )
@@ -1848,18 +1819,39 @@ def create_demo(pipe, yolo_model, depth_model, vggt_model, device, dtype):
                         1.0, 15.0, value=6.0, step=0.5, label="Guidance Scale",
                     )
                     seed = gr.Number(label="Seed", value=42, precision=0)
-                causal_flag = gr.Checkbox(
-                    label="Causal (depth warp first 50% only)",
-                    value=False,
-                )
-
                 with gr.Row():
                     btn_gen_point = gr.Button(
-                        "Generate Point Video", variant="secondary", size="lg",
+                        "1. Generate Point Video", variant="secondary", size="lg",
                     )
                     btn_gen_video = gr.Button(
-                        "Generate Video", variant="primary", size="lg",
+                        "2. Generate Depth & RGB Video", variant="primary", size="lg",
                     )
+
+            with gr.Column(scale=2):
+                with gr.Accordion("Advanced Ego Speed", open=False):
+                    gr.Markdown(
+                        "Adjust relative speed at each keyframe "
+                        "(1.0 = normal, <1 = slower, >1 = faster)."
+                    )
+                    causal_flag = gr.Checkbox(
+                        label="Causal (depth warp first 50% only)",
+                        value=False,
+                    )
+                    with gr.Row():
+                        spd_0 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="Start")
+                        spd_1 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="20%")
+                    with gr.Row():
+                        spd_2 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="40%")
+                        spd_3 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="60%")
+                    with gr.Row():
+                        spd_4 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="80%")
+                        spd_5 = gr.Slider(0.0, 3.0, value=1.0, step=0.1,
+                                          label="End")
 
         gr.Markdown("### Condition Previews")
         with gr.Row():
@@ -1978,7 +1970,7 @@ def parse_args():
     default_yolo = os.path.join(SCRIPT_DIR, "weights", "yolo11l-seg.pt")
 
     p = argparse.ArgumentParser(
-        description="Motion Dreamer Gradio Demo",
+        description="Motion Forcing Gradio Demo",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -2014,7 +2006,7 @@ Examples:
              "and plain PyTorch state dicts. Same flag as the training script.",
     )
     p.add_argument(
-        "--transformer_ckpt", type=str, default="TSXu/driving_forcing_80k",
+        "--transformer_ckpt", type=str, default="TSXu/MotionForcing_driving",
         help="Path or HuggingFace model ID for the fine-tuned transformer checkpoint. "
              "Accepts a local directory, a local file, or a HF model ID like 'TSXu/forcing_depth' "
              "(auto-downloaded/cached). Auto-detects DeepSpeed / safetensors / sharded format. "

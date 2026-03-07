@@ -4,7 +4,7 @@
 
 [![arXiv](https://img.shields.io/badge/arXiv-Paper-red?logo=arxiv)](https://arxiv.org/abs/XXXX.XXXXX)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue?logo=googlechrome)](https://tianshuo-xu.github.io/Motion-Forcing/)
-[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Model-yellow)](https://huggingface.co/TSXu/driving_forcing_80k)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Model-yellow)](https://huggingface.co/TSXu/MotionForcing_driving)
 
 **Tianshuo Xu<sup>1</sup>, Zhifei Chen<sup>1</sup>, Leyi Wu<sup>1</sup>, Hao Lu<sup>1</sup>, Ying-cong Chen<sup>1,2\*</sup>**
 
@@ -74,18 +74,20 @@ cd Motion-Forcing
 pip install -r requirements.txt
 ```
 
-Build VGGT custom CUDA kernels (requires CUDA toolkit):
+Build VGGT:
 
 ```bash
-pip install git+https://github.com/facebookresearch/vggt.git
+git clone git@github.com:facebookresearch/vggt.git 
+cd vggt
+pip install -e .
 ```
 
 Download depth estimation weights:
 
 ```bash
-cd third_party/Video-Depth-Anything
+cd Video-Depth-Anything
 bash get_weights.sh
-cd ../..
+
 ```
 
 Download YOLO segmentation weights into `weights/yolo11l-seg.pt` (used for interactive object selection in the demo).

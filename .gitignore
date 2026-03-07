@@ -11,7 +11,7 @@ weights/*.pt
 weights/*.pth
 weights/*.bin
 weights/*.safetensors
-third_party/Video-Depth-Anything/checkpoints/
+Video-Depth-Anything/checkpoints/
 
 # Temp files
 /tmp/
