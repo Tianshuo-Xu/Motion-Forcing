@@ -1053,11 +1053,15 @@ def warp_depth_with_cameras(depth_map_visual, raw_depth_0, extrinsics, intrinsic
                  (p_cam_t[:, 2] > 0))
         target_idx = (target_y * W + target_x).clamp(0, H * W - 1)
 
-        out_flat = torch.zeros(B, C, H * W, device=device, dtype=dtype)
+        out_flat = torch.zeros(B, C, H * W + 1, device=device, dtype=dtype)
         valid_flat = valid.unsqueeze(1).expand_as(src_flat)
-        idx_flat = target_idx.unsqueeze(1).expand_as(src_flat)
-        out_flat.scatter_(2, idx_flat * valid_flat.long(),
-                          src_flat * valid_flat.float())
+        idx_flat = torch.where(
+            valid_flat, 
+            target_idx.unsqueeze(1).expand_as(src_flat), 
+            torch.tensor(H * W, device=device, dtype=torch.long)
+        )
+        out_flat.scatter_reduce_(2, idx_flat, src_flat * valid_flat.float(), reduce='amax', include_self=True)
+        out_flat = out_flat[:, :, :H * W]
         warped_frames.append(out_flat.view(B, C, H, W).unsqueeze(1))
 
     camera_depth_video = torch.cat(warped_frames, dim=1)
