@@ -1,58 +1,84 @@
-# Motion-Forcing
+<div align="center">
 
-**Point → Shape → Appearance** video generation via motion forcing.
+# Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics
 
-Given a single image, users can interactively select objects, draw motion trajectories, and control camera movement to generate realistic driving-scene videos.
+[![arXiv](https://img.shields.io/badge/arXiv-Paper-red?logo=arxiv)](https://arxiv.org/abs/XXXX.XXXXX)
+[![Project Page](https://img.shields.io/badge/Project-Page-blue?logo=googlechrome)](https://tianshuo-xu.github.io/Motion-Forcing/)
+[![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Model-yellow)](https://huggingface.co/TSXu/driving_forcing_80k)
 
-## Project Structure
+**Tianshuo Xu<sup>1</sup>, Zhifei Chen<sup>1</sup>, Leyi Wu<sup>1</sup>, Hao Lu<sup>1</sup>, Ying-cong Chen<sup>1,2\*</sup>**
 
-```
-Motion-Forcing/
-├── gradio_demo.py              # Gradio inference demo (main entry)
-├── models/
-│   ├── __init__.py
-│   ├── pipeline.py             # CogVideoXImageToVideoPipeline (two-stage denoising)
-│   ├── cogvideox_transformer_MD.py  # CogVideoXTransformer3DModel (motion-forcing)
-│   └── normalization.py        # Custom norm layers
-├── Video-Depth-Anything/   # Depth estimation (git submodule)
-├── weights/
-│   └── yolo11l-seg.pt          # YOLO segmentation weights (download manually)
-├── requirements.txt
-└── README.md
-```
+<sup>1</sup>HKUST (GZ) &nbsp;&nbsp; <sup>2</sup>HKUST &nbsp;&nbsp; \* corresponding author
+
+</div>
+
+Motion Forcing decouples physical reasoning from visual synthesis via a hierarchical **Point → Shape → Appearance** paradigm, enabling precise and physically consistent video generation from a single image and user-drawn trajectories. Given sparse motion anchors, the model first generates dynamic depth (Shape), then renders high-fidelity RGB frames (Appearance) — bridging the gap between control signals and complex scene dynamics.
+
+---
+
+## Visualization
+
+### Driving Ego-Action Control
+
+<table>
+  <tr>
+    <td align="center"><b>Turn Left</b></td>
+    <td align="center"><b>Turn Right</b></td>
+    <td align="center"><b>Speed Up</b></td>
+    <td align="center"><b>Slow Down</b></td>
+  </tr>
+  <tr>
+    <td><video src="assets/Videos/driving_ego_action/ours-left.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/driving_ego_action/ours-right.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/driving_ego_action/ours-fast.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/driving_ego_action/ours-slow.mp4" autoplay muted loop playsinline width="180"></video></td>
+  </tr>
+</table>
+
+### Complex Driving Scenarios
+
+<table>
+  <tr>
+    <td align="center"><b>Dangerous Cut-In</b></td>
+    <td align="center"><b>Double Cut-In</b></td>
+    <td align="center"><b>Right Cut-In</b></td>
+    <td align="center"><b>Left Cut-In & Brake</b></td>
+  </tr>
+  <tr>
+    <td><video src="assets/Videos/more_driving_scene1/ours-dangerous-cut-in-trend.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/more_driving_scene1/ours-double-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/more_driving_scene1/ours-right-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="assets/Videos/more_driving_scene1/ours-left-cut-in-and-brake.mp4" autoplay muted loop playsinline width="180"></video></td>
+  </tr>
+</table>
+
+---
+
+## TODO
+
+- [x] Inference code
+- [x] Gradio demo
+- [x] Pretrained checkpoint
+- [ ] Data processing pipeline (coming soon)
+- [ ] Training code (coming soon)
+
+---
 
 ## Setup
-
-### 1. Clone with submodules
 
 ```bash
 git clone --recurse-submodules https://github.com/Tianshuo-Xu/Motion-Forcing.git
 cd Motion-Forcing
-```
-
-If you already cloned without `--recurse-submodules`:
-
-```bash
-git submodule update --init --recursive
-```
-
-### 2. Install dependencies
-
-```bash
 pip install -r requirements.txt
 ```
 
-### 3. Download model weights
-
-**YOLO segmentation model:**
+Build VGGT custom CUDA kernels (requires CUDA toolkit):
 
 ```bash
-mkdir -p weights
-# Download yolo11l-seg.pt into weights/
-wget -P weights/ https://github.com/ultralytics/assets/releases/download/v8.3.0/yolo11l-seg.pt
+pip install git+https://github.com/facebookresearch/vggt.git
 ```
 
-**Video-Depth-Anything weights:**
+Download depth estimation weights:
 
 ```bash
 cd third_party/Video-Depth-Anything
@@ -60,78 +86,35 @@ bash get_weights.sh
 cd ../..
 ```
 
-**CogVideoX base model & fine-tuned transformer** are automatically downloaded from HuggingFace Hub on first run:
-- Base: `THUDM/CogVideoX-5b-I2V`
-- Transformer: `TSXu/driving_forcing_80k`
+Download YOLO segmentation weights into `weights/yolo11l-seg.pt` (used for interactive object selection in the demo).
 
-## Usage
+CogVideoX base model and the fine-tuned transformer ([`TSXu/MotionForcing_driving`](https://huggingface.co/TSXu/MotionForcing_driving)) are downloaded automatically from HuggingFace on first run.
 
-### Quick Start (recommended)
+---
+
+## Run the Demo
 
 ```bash
 python gradio_demo.py
 ```
 
-This loads the default configuration:
-- Base model: `THUDM/CogVideoX-5b-I2V`
-- Fine-tuned transformer: `TSXu/driving_forcing_80k`
+Open `http://localhost:7860`. Upload an image, click objects to draw trajectories, then generate.
 
-### Custom Checkpoints
 
-```bash
-# HuggingFace model ID
-python gradio_demo.py \
-    --model_path THUDM/CogVideoX-5b-I2V \
-    --transformer_ckpt TSXu/driving_forcing_80k
 
-# Local checkpoint directory
-python gradio_demo.py \
-    --transformer_ckpt /path/to/finetuned/transformer_dir
+## Acknowledgements
 
-# DeepSpeed checkpoint
-python gradio_demo.py \
-    --load_pretrained_weight /path/to/checkpoint-XXXX/pytorch_model/mp_rank_00_model_states.pt
+We thank the authors of [CogVideoX](https://github.com/THUDM/CogVideo), [Video-Depth-Anything](https://github.com/DepthAnything/Video-Depth-Anything), [VGGT](https://huggingface.co/facebook/VGGT-1B), and [Ultralytics YOLO](https://github.com/ultralytics/ultralytics) for their outstanding open-source contributions.
 
-# With LoRA
-python gradio_demo.py \
-    --lora_path /path/to/lora_weights
+---
+
+## Citation
+
+```bibtex
+@inproceedings{xu2026motionforcing,
+  title     = {Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics},
+  author    = {Xu, Tianshuo and Chen, Zhifei and Wu, Leyi and Lu, Hao and Chen, Ying-cong},
+  booktitle = {arXiv},
+  year      = {2026}
+}
 ```
-
-### Options
-
-| Argument | Default | Description |
-|---|---|---|
-| `--model_path` | `THUDM/CogVideoX-5b-I2V` | Base CogVideoX model (HF ID or local path) |
-| `--transformer_ckpt` | `TSXu/driving_forcing_80k` | Fine-tuned transformer (HF ID or local path) |
-| `--load_pretrained_weight` | `None` | Direct weight file path (DeepSpeed / .pt / .safetensors) |
-| `--lora_path` | `None` | LoRA weights directory |
-| `--yolo_path` | `weights/yolo11l-seg.pt` | YOLO segmentation model path |
-| `--device` | `cuda` | Device |
-| `--dtype` | `bfloat16` | Model precision (`bfloat16` / `float16`) |
-| `--cpu_offload` | `False` | Enable sequential CPU offload to save VRAM |
-| `--port` | `7860` | Gradio server port |
-| `--share` | `False` | Create public Gradio link |
-
-## Workflow
-
-1. **Upload** an image → YOLO automatically segments objects
-2. **Click** on an object to select it
-3. **Click** additional waypoints to draw a motion path
-4. **Finish Annotation** → repeat for more objects
-5. **Camera Path** (optional) → click on the camera canvas to control ego-vehicle trajectory
-6. **Generate Point Video** → builds circle-motion and camera-depth condition videos
-7. **Generate Video** → runs two-stage diffusion (shape → appearance)
-
-## Models Used
-
-| Model | Source | Purpose |
-|---|---|---|
-| CogVideoX-5b-I2V | [THUDM/CogVideoX-5b-I2V](https://huggingface.co/THUDM/CogVideoX-5b-I2V) | Base video generation |
-| Motion-Forcing Transformer | [TSXu/driving_forcing_80k](https://huggingface.co/TSXu/driving_forcing_80k) | Fine-tuned transformer |
-| YOLO11l-seg | [ultralytics](https://github.com/ultralytics/ultralytics) | Instance segmentation |
-| Video-Depth-Anything | [DepthAnything](https://github.com/DepthAnything/Video-Depth-Anything) | Monocular depth estimation |
-| VGGT-1B | [facebook/VGGT-1B](https://huggingface.co/facebook/VGGT-1B) | Camera pose estimation |
-
-## License
-
-MIT

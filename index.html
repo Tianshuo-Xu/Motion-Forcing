@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Motion Forcing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99,102,241,.25);
+      --bg: #0f0f11;
+      --bg-card: rgba(255,255,255,.04);
+      --bg-card-hover: rgba(255,255,255,.07);
+      --text: #e4e4e7;
+      --text-dim: #a1a1aa;
+      --text-bright: #fafafa;
+      --border: rgba(255,255,255,.08);
+      --border-accent: rgba(99,102,241,.4);
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; -webkit-font-smoothing: antialiased; }
+
+    /* ── animations ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+    .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* ── header / hero ── */
+    header {
+      position: relative;
+      padding: 80px 24px 60px;
+      text-align: center;
+      overflow: hidden;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(99,102,241,.15), transparent),
+                  radial-gradient(ellipse 60% 40% at 80% 60%, rgba(168,85,247,.08), transparent),
+                  var(--bg);
+    }
+    header::after {
+      content: '';
+      position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 3.5vw, 2.6rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      max-width: 900px;
+      margin: 0 auto 20px;
+      color: var(--text-bright);
+      background: linear-gradient(135deg, #fff 0%, #c4b5fd 50%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: fadeUp .8s ease-out;
+    }
+    .authors {
+      font-size: 1.05rem; font-weight: 500; color: var(--text-dim); margin-bottom: 4px;
+      animation: fadeUp .8s ease-out .1s both;
+    }
+    .affil {
+      font-size: 0.88rem; color: var(--text-dim); margin-bottom: 24px; opacity: .7;
+      animation: fadeUp .8s ease-out .15s both;
+    }
+    .badges {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 28px;
+      animation: fadeUp .8s ease-out .2s both;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 999px;
+      font-size: 0.88rem; font-weight: 600;
+      text-decoration: none;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: all .25s ease;
+    }
+    .badge:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.3); }
+    .badge-arxiv  { background: rgba(185,28,28,.8); color: #fff; }
+    .badge-github { background: rgba(36,41,46,.8); color: #fff; }
+    .badge-hf     { background: rgba(245,158,11,.85); color: #fff; }
+    .teaser {
+      font-size: 1.05rem; max-width: 760px; margin: 0 auto; color: var(--text-dim);
+      line-height: 1.8;
+      animation: fadeUp .8s ease-out .25s both;
+    }
+    .teaser strong { color: var(--text-bright); font-weight: 600; }
+
+    /* ── nav dots ── */
+    .side-nav {
+      position: fixed; right: 20px; top: 50%; transform: translateY(-50%);
+      display: flex; flex-direction: column; gap: 10px; z-index: 100;
+    }
+    .side-nav a {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: rgba(255,255,255,.2); display: block;
+      transition: all .3s ease; position: relative;
+    }
+    .side-nav a:hover, .side-nav a.active { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); transform: scale(1.4); }
+    .side-nav a .tip {
+      position: absolute; right: 18px; top: 50%; transform: translateY(-50%);
+      background: rgba(0,0,0,.85); color: #fff; font-size: .72rem;
+      padding: 3px 10px; border-radius: 6px; white-space: nowrap;
+      opacity: 0; pointer-events: none; transition: opacity .2s;
+    }
+    .side-nav a:hover .tip { opacity: 1; }
+    @media (max-width: 900px) { .side-nav { display: none; } }
+
+    /* ── main ── */
+    main { max-width: 1200px; margin: 0 auto; padding: 48px 24px 80px; }
+    section { margin-bottom: 64px; }
+    h2 {
+      font-size: 1.5rem; font-weight: 700; color: var(--text-bright);
+      margin-bottom: 28px; position: relative; padding-left: 18px;
+    }
+    h2::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 4px;
+      background: linear-gradient(180deg, var(--accent), #a78bfa);
+      border-radius: 2px;
+    }
+    h3 { font-size: 1.05rem; font-weight: 600; color: var(--text); margin-bottom: 14px; }
+
+    /* ── video grids ── */
+    .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .grid-4 { grid-template-columns: repeat(2, 1fr); } .grid-3 { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .grid-4, .grid-3 { grid-template-columns: 1fr; } }
+
+    .vcard {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); overflow: hidden;
+      transition: all .3s ease;
+    }
+    .vcard:hover { background: var(--bg-card-hover); border-color: rgba(255,255,255,.14); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(0,0,0,.25); }
+    .vcard-label { font-size: 0.78rem; font-weight: 600; text-align: center; padding: 8px 8px 2px; color: var(--text-dim); letter-spacing: .01em; }
+    .vcard img, .vcard video { width: 100%; display: block; }
+
+    /* ── comparison table ── */
+    .cmp-case { margin-bottom: 32px; }
+    .cmp-case h3 { margin-bottom: 12px; color: var(--text-dim); }
+    .cmp-row  { display: grid; grid-template-columns: auto repeat(4, 1fr); gap: 12px; align-items: start; }
+    @media (max-width: 700px) { .cmp-row { grid-template-columns: 60px repeat(2, 1fr); } .cmp-row .cmp-col:nth-child(n+4) { display: none; } }
+    .cmp-cond {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: flex-start; padding-top: 26px;
+    }
+    .cmp-cond img {
+      width: 120px; border-radius: 8px; border: 2px solid var(--border);
+    }
+    .cmp-cond .pipe-label { font-size: 0.7rem; color: var(--text-dim); display: block; margin-top: 6px; }
+    .cmp-col  { text-align: center; }
+    .cmp-col .cmp-label {
+      font-size: 0.82rem; font-weight: 700; margin-bottom: 8px;
+      color: var(--text-dim);
+    }
+    .cmp-col video {
+      width: 100%; aspect-ratio: 3/2; object-fit: cover;
+      border-radius: 8px; border: 2px solid var(--border);
+      transition: border-color .3s;
+    }
+    .cmp-col video:hover { border-color: rgba(255,255,255,.2); }
+    .ours .cmp-label { color: var(--accent-hover); }
+    .ours video { border-color: var(--border-accent); }
+    .ours video:hover { border-color: var(--accent); }
+
+    /* ── pipe illustration ── */
+    .pipe-section {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 28px; margin-bottom: 20px;
+    }
+    .pipe-section-title { font-weight: 700; text-align: center; margin-bottom: 20px; color: var(--text); }
+    .pipe-flow { display: flex; align-items: center; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .pipe-node { display: flex; flex-direction: column; align-items: center; text-align: center; }
+    .pipe-node img, .pipe-node video { width: 160px; border: 1.5px solid var(--border); border-radius: 8px; }
+    .pipe-label { font-size: 0.78rem; color: var(--text-dim); margin-top: 6px; font-weight: 600; }
+    .pipe-arrow { font-size: 1.4em; color: rgba(255,255,255,.25); }
+    .pipe-dashed {
+      font-size: 0.75rem; color: var(--text-dim); font-style: italic;
+      padding: 10px 14px; border: 2px dashed rgba(255,255,255,.15);
+      border-radius: 8px; text-align: center; line-height: 1.5;
+    }
+    .pipe-plus { font-size: 1.3em; font-weight: bold; color: rgba(255,255,255,.25); }
+    .pipe-branches { display: flex; flex-direction: column; gap: 18px; }
+    .pipe-branch { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .pipe-stage {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 14px 18px;
+      background: linear-gradient(135deg, var(--accent), #a78bfa);
+      border-radius: var(--radius); color: #fff; font-weight: bold;
+      text-align: center; min-width: 110px;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+    .stage-name { font-size: 0.9rem; }
+    .stage-sub  { font-size: 0.72rem; font-weight: normal; opacity: .85; margin-top: 2px; }
+    .pipe-conditions { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .pipe-conditions .pipe-node img, .pipe-conditions .pipe-node video { width: 90px; }
+    .pipe-conditions .pipe-label { font-size: 0.68rem; }
+    .pipe-note { font-size: 0.78rem; color: var(--text-dim); text-align: center; margin-top: 14px; font-style: italic; opacity: .7; }
+
+    /* ── citation ── */
+    pre {
+      background: rgba(255,255,255,.04); color: #c4b5fd;
+      padding: 22px 26px; border-radius: var(--radius);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; overflow-x: auto; line-height: 1.8;
+      border: 1px solid var(--border);
+    }
+
+    /* ── footer ── */
+    footer {
+      text-align: center; padding: 28px; font-size: 0.82rem;
+      color: var(--text-dim); border-top: 1px solid var(--border);
+      opacity: .6;
+    }
+
+    /* ── scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,.2); }
+
+    /* ── selection ── */
+    ::selection { background: var(--accent); color: #fff; }
+  </style>
+</head>
+<body>
+
+<!-- Side navigation dots -->
+<nav class="side-nav">
+  <a href="#pipeline"><span class="tip">Pipeline</span></a>
+  <a href="#cmp-driving"><span class="tip">Driving Comparison</span></a>
+  <a href="#more-driving"><span class="tip">More Driving</span></a>
+  <a href="#ego-motion"><span class="tip">Ego-Motion</span></a>
+  <a href="#cmp-physion"><span class="tip">Physics Comparison</span></a>
+  <a href="#more-physics"><span class="tip">More Physics</span></a>
+  <a href="#embodied"><span class="tip">Embodied AI</span></a>
+  <a href="#failure"><span class="tip">Failure Cases</span></a>
+  <a href="#citation"><span class="tip">Citation</span></a>
+</nav>
+
+<header>
+  <h1>Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics</h1>
+  <p class="authors">
+    Tianshuo Xu<sup>1</sup>, Zhifei Chen<sup>1</sup>, Leyi Wu<sup>1</sup>,
+    Hao Lu<sup>1</sup>, Ying-cong Chen<sup>1,2*</sup>
+  </p>
+  <p class="affil">
+    <sup>1</sup>HKUST (GZ) &nbsp;&nbsp; <sup>2</sup>HKUST &nbsp;&nbsp;
+    <sup>*</sup>Corresponding Author
+  </p>
+  <div class="badges">
+    <a class="badge badge-arxiv" href="https://arxiv.org/abs/XXXX.XXXXX" target="_blank">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M3 3h18v18H3z" fill="none" stroke="currentColor" stroke-width="2"/><text x="4" y="17" font-size="11" fill="currentColor" font-family="Arial">arXiv</text></svg>
+      arXiv
+    </a>
+    <a class="badge badge-github" href="https://github.com/Tianshuo-Xu/Motion-Forcing" target="_blank">
+      <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+      GitHub
+    </a>
+    <a class="badge badge-hf" href="https://huggingface.co/TSXu/driving_forcing_80k" target="_blank">
+      🤗 Model
+    </a>
+  </div>
+  <p class="teaser">
+    Given a single image and user-drawn motion trajectories, <strong>Motion Forcing</strong>
+    generates physically consistent videos through a hierarchical
+    <strong>Point&nbsp;→&nbsp;Shape&nbsp;→&nbsp;Appearance</strong> pipeline —
+    decoupling 3D geometry reasoning from texture synthesis to handle
+    complex dynamics such as collisions, cut-ins, and multi-object interactions.
+  </p>
+</header>
+
+<main>
+
+  <!-- Pipeline Illustration -->
+  <section id="pipeline" class="reveal">
+    <h2>Pipeline Illustration</h2>
+    <div class="pipe-section">
+      <div class="pipe-section-title">(a) Preparation of Motion Representations</div>
+      <div class="pipe-flow">
+        <div class="pipe-node">
+          <img src="assets/Videos/illustration/input-image.png" alt="Input Image">
+          <span class="pipe-label">Input Image</span>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-dashed">Depth &amp; Seg<br>Models</div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-branches">
+          <div class="pipe-branch">
+            <div class="pipe-node">
+              <img src="assets/Videos/illustration/depth-warp-frame1.png" alt="Static Depth">
+              <span class="pipe-label">Static Depth</span>
+            </div>
+            <div class="pipe-plus">+</div>
+            <div class="pipe-node">
+              <img src="assets/Videos/illustration/ego-motion.png" alt="Ego Motion">
+              <span class="pipe-label">Ego Motion</span>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+              <video autoplay loop muted playsinline>
+                <source src="assets/Videos/illustration/depth-warping.mp4" type="video/mp4">
+              </video>
+              <span class="pipe-label">Depth Warping Video</span>
+            </div>
+          </div>
+          <div class="pipe-branch">
+            <div class="pipe-node">
+              <img src="assets/Videos/illustration/point-frame1.png" alt="Point Image">
+              <span class="pipe-label">Point Image</span>
+            </div>
+            <div class="pipe-plus">+</div>
+            <div class="pipe-node">
+              <img src="assets/Videos/illustration/object-motion.png" alt="Object Motion">
+              <span class="pipe-label">Object Motion</span>
+            </div>
+            <div class="pipe-arrow">→</div>
+            <div class="pipe-node">
+              <video autoplay loop muted playsinline>
+                <source src="assets/Videos/illustration/point-video.mp4" type="video/mp4">
+              </video>
+              <span class="pipe-label">Point Video</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="pipe-note">Static depth = depth × ~seg (dynamic objects removed); Point image = minimum inscribed circles of object masks.</p>
+    </div>
+
+    <div class="pipe-section">
+      <div class="pipe-section-title">(b) Two-Stage Generation</div>
+      <div class="pipe-flow">
+        <div class="pipe-conditions">
+          <div class="pipe-node">
+            <img src="assets/Videos/illustration/input-image.png" alt="Input Image">
+            <span class="pipe-label">Input Image</span>
+          </div>
+          <div class="pipe-node">
+            <video autoplay loop muted playsinline>
+              <source src="assets/Videos/illustration/depth-warping.mp4" type="video/mp4">
+            </video>
+            <span class="pipe-label">Depth Warping</span>
+          </div>
+          <div class="pipe-node">
+            <video autoplay loop muted playsinline>
+              <source src="assets/Videos/illustration/point-video.mp4" type="video/mp4">
+            </video>
+            <span class="pipe-label">Point Video</span>
+          </div>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-stage">
+          <span class="stage-name">Stage 1</span>
+          <span class="stage-sub">Motion Forcing</span>
+          <span class="stage-sub">Point → Shape</span>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <video autoplay loop muted playsinline>
+            <source src="assets/Videos/illustration/depth-video.mp4" type="video/mp4">
+          </video>
+          <span class="pipe-label">Depth Video</span>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-stage">
+          <span class="stage-name">Stage 2</span>
+          <span class="stage-sub">Motion Forcing</span>
+          <span class="stage-sub">Shape → Appearance</span>
+        </div>
+        <div class="pipe-arrow">→</div>
+        <div class="pipe-node">
+          <video autoplay loop muted playsinline>
+            <source src="assets/Videos/illustration/rgb-video.mp4" type="video/mp4">
+          </video>
+          <span class="pipe-label">RGB Video</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparisons Driving -->
+  <section id="cmp-driving" class="reveal">
+    <h2>Comparisons — Driving</h2>
+    <div class="cmp-case">
+      <h3>Case 1</h3>
+      <div class="cmp-row">
+        <div class="cmp-cond"><img src="assets/Videos/comparisons_driving/ours_driving_1.png" alt="condition"><span class="pipe-label">Condition</span></div>
+        <div class="cmp-col ours"><div class="cmp-label">Ours</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/ours_driving_1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Wan 2.6</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/Wan_driving_1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Seed Dance 2.0</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/jimeng-driving-1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">MOFA-Video</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/mofa_driving_1.mp4" type="video/mp4"></video></div>
+      </div>
+    </div>
+    <div class="cmp-case">
+      <h3>Case 2</h3>
+      <div class="cmp-row">
+        <div class="cmp-cond"><img src="assets/Videos/comparisons_driving/ours_driving_2.png" alt="condition"><span class="pipe-label">Condition</span></div>
+        <div class="cmp-col ours"><div class="cmp-label">Ours</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/ours_driving_2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Wan 2.6</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/Wan_driving_2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Seed Dance 2.0</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/jimeng-driving-2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">MOFA-Video</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_driving/mofa_driving_2.mp4" type="video/mp4"></video></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- More Driving -->
+  <section id="more-driving" class="reveal">
+    <h2>More Driving Scenes</h2>
+    <h3 style="margin-bottom:12px">Scene 1</h3>
+    <div class="grid-4" style="margin-bottom:24px">
+      <div class="vcard"><div class="vcard-label">Dangerous Cut-in</div><img src="assets/Videos/more_driving_scene1/ours-dangerous-cut-in-trend.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene1/ours-dangerous-cut-in-trend.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Double Cut-in</div><img src="assets/Videos/more_driving_scene1/ours-double-cut-in.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene1/ours-double-cut-in.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Left Cut-in &amp; Brake</div><img src="assets/Videos/more_driving_scene1/ours-left-cut-in-and-brake.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene1/ours-left-cut-in-and-brake.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Right Cut-in</div><img src="assets/Videos/more_driving_scene1/ours-right-cut-in.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene1/ours-right-cut-in.mp4" type="video/mp4"></video></div>
+    </div>
+    <h3 style="margin-bottom:12px">Scene 2 &amp; 3</h3>
+    <div class="grid-4">
+      <div class="vcard"><div class="vcard-label">Front Car Braking</div><img src="assets/Videos/more_driving_scene2/front_car_brake.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene2/front_car_brake.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Dangerous Right Cut-out</div><img src="assets/Videos/more_driving_scene2/front_car_dangerous_cut_out_right.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene2/front_car_dangerous_cut_out_right.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Reverse Car Left Cut-in</div><img src="assets/Videos/more_driving_scene3/left-reverse-car-cut-in.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene3/left-reverse-car-cut-in.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Right Cut-in</div><img src="assets/Videos/more_driving_scene3/right-cut-in.webp" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/more_driving_scene3/right-cut-in.mp4" type="video/mp4"></video></div>
+    </div>
+  </section>
+
+  <!-- Driving Ego Action -->
+  <section id="ego-motion" class="reveal">
+    <h2>Ego-Motion Control</h2>
+    <p style="margin-bottom:18px;color:var(--text-dim);font-size:.95rem;">The same scene with different ego-vehicle trajectories (speed up / slow down / turn left / turn right).</p>
+    <div class="grid-4">
+      <div class="vcard">
+        <div class="vcard-label">Speed Up</div>
+        <img src="assets/Videos/driving_ego_action/ours-fast.png" alt="fast condition">
+        <video autoplay loop muted playsinline><source src="assets/Videos/driving_ego_action/ours-fast.mp4" type="video/mp4"></video>
+      </div>
+      <div class="vcard">
+        <div class="vcard-label">Slow Down</div>
+        <img src="assets/Videos/driving_ego_action/ours-slow.png" alt="slow condition">
+        <video autoplay loop muted playsinline><source src="assets/Videos/driving_ego_action/ours-slow.mp4" type="video/mp4"></video>
+      </div>
+      <div class="vcard">
+        <div class="vcard-label">Turn Left</div>
+        <img src="assets/Videos/driving_ego_action/ours-left.png" alt="left condition">
+        <video autoplay loop muted playsinline><source src="assets/Videos/driving_ego_action/ours-left.mp4" type="video/mp4"></video>
+      </div>
+      <div class="vcard">
+        <div class="vcard-label">Turn Right</div>
+        <img src="assets/Videos/driving_ego_action/ours-right.png" alt="right condition">
+        <video autoplay loop muted playsinline><source src="assets/Videos/driving_ego_action/ours-right.mp4" type="video/mp4"></video>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparisons Physion -->
+  <section id="cmp-physion" class="reveal">
+    <h2>Comparisons — Physics (Physion)</h2>
+    <div class="cmp-case">
+      <h3>Case 1</h3>
+      <div class="cmp-row">
+        <div class="cmp-cond"><img src="assets/Videos/comparisons_physion/ours_physion_1.png" alt="condition"><span class="pipe-label">Condition</span></div>
+        <div class="cmp-col ours"><div class="cmp-label">Ours</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/ours_physion_1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Wan 2.6</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/Wan_physion_1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Seed Dance 2.0</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/jimeng-physion-1.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">MOFA-Video</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/mofa_physion_1.mp4" type="video/mp4"></video></div>
+      </div>
+    </div>
+    <div class="cmp-case">
+      <h3>Case 2</h3>
+      <div class="cmp-row">
+        <div class="cmp-cond"><img src="assets/Videos/comparisons_physion/ours_physion_2.png" alt="condition"><span class="pipe-label">Condition</span></div>
+        <div class="cmp-col ours"><div class="cmp-label">Ours</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/ours_physion_2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Wan 2.6</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/Wan_physion_2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">Seed Dance 2.0</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/jimeng-physion-2.mp4" type="video/mp4"></video></div>
+        <div class="cmp-col"><div class="cmp-label">MOFA-Video</div><video autoplay loop muted playsinline><source src="assets/Videos/comparisons_physion/mofa_physion_2.mp4" type="video/mp4"></video></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Physion more -->
+  <section id="more-physics" class="reveal">
+    <h2>More Physics Actions</h2>
+    <div class="grid-4">
+      <div class="vcard"><div class="vcard-label">Action 2 — Condition</div><img src="assets/Videos/more_physion_action/action2.png" alt=""></div>
+      <div class="vcard"><div class="vcard-label">Action 2 — Generated</div><video autoplay loop muted playsinline><source src="assets/Videos/more_physion_action/action2.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Action 4 — Condition</div><img src="assets/Videos/more_physion_action/action4.png" alt=""></div>
+      <div class="vcard"><div class="vcard-label">Action 4 — Generated</div><video autoplay loop muted playsinline><source src="assets/Videos/more_physion_action/action4.mp4" type="video/mp4"></video></div>
+    </div>
+  </section>
+
+  <!-- Embodied AI -->
+  <section id="embodied" class="reveal">
+    <h2>Embodied AI (Jaco Play)</h2>
+    <div class="grid-4" style="margin-bottom:14px">
+      <div class="vcard"><div class="vcard-label">Case 1 · Action 1</div><img src="assets/Videos/embodied_ai/case1/action1.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case1/action1.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 1 · Action 2</div><img src="assets/Videos/embodied_ai/case1/action2.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case1/action2.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 2 · Action 1</div><img src="assets/Videos/embodied_ai/case2/action1.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case2/action1.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 2 · Action 2</div><img src="assets/Videos/embodied_ai/case2/action2.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case2/action2.mp4" type="video/mp4"></video></div>
+    </div>
+    <div class="grid-4">
+      <div class="vcard"><div class="vcard-label">Case 3 · Action 1</div><img src="assets/Videos/embodied_ai/case3/action1.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case3/action1.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 3 · Action 2</div><img src="assets/Videos/embodied_ai/case3/action2.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case3/action2.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 4 · Action 1</div><img src="assets/Videos/embodied_ai/case4/action1.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case4/action1.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 4 · Action 2</div><img src="assets/Videos/embodied_ai/case4/action2.png" alt=""><video autoplay loop muted playsinline><source src="assets/Videos/embodied_ai/case4/action2.mp4" type="video/mp4"></video></div>
+    </div>
+  </section>
+
+  <!-- Failure Cases -->
+  <section id="failure" class="reveal">
+    <h2>Failure Cases</h2>
+    <p style="margin-bottom:16px;color:var(--text-dim);font-size:.9rem;font-style:italic;">When the control signals deviate significantly from realistic scenarios, the model still produces incorrect results.</p>
+    <div class="grid-4">
+      <div class="vcard"><div class="vcard-label">Case 1 — Condition</div><img src="assets/Videos/failure_case/fail1.png" alt="fail1 condition"></div>
+      <div class="vcard"><div class="vcard-label">Case 1 — Result</div><video autoplay loop muted playsinline><source src="assets/Videos/failure_case/fail1.mp4" type="video/mp4"></video></div>
+      <div class="vcard"><div class="vcard-label">Case 2 — Condition</div><img src="assets/Videos/failure_case/fail2.png" alt="fail2 condition"></div>
+      <div class="vcard"><div class="vcard-label">Case 2 — Result</div><video autoplay loop muted playsinline><source src="assets/Videos/failure_case/fail2.mp4" type="video/mp4"></video></div>
+    </div>
+  </section>
+
+  <!-- Acknowledgements -->
+  <section class="reveal">
+    <h2>Acknowledgements</h2>
+    <p style="color:var(--text-dim);font-size:.95rem;line-height:1.8">
+      We thank the authors of
+      <a href="https://github.com/THUDM/CogVideo" target="_blank">CogVideoX</a>,
+      <a href="https://github.com/DepthAnything/Video-Depth-Anything" target="_blank">Video-Depth-Anything</a>,
+      <a href="https://huggingface.co/facebook/VGGT-1B" target="_blank">VGGT</a>,
+      and <a href="https://github.com/ultralytics/ultralytics" target="_blank">Ultralytics YOLO</a>
+      for their outstanding open-source contributions.
+    </p>
+  </section>
+
+  <!-- Citation -->
+  <section id="citation" class="reveal">
+    <h2>Citation</h2>
+    <pre>@inproceedings{xu2026motionforcing,
+  title     = {Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics},
+  author    = {Xu, Tianshuo and Chen, Zhifei and Wu, Leyi and Lu, Hao and Chen, Ying-cong},
+  booktitle = {arXiv},
+  year      = {2026}
+}</pre>
+  </section>
+
+</main>
+
+<footer>HKUST (GZ) · HKUST</footer>
+
+<script>
+// Scroll reveal
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+// Side nav active state
+const navLinks = document.querySelectorAll('.side-nav a');
+const sections = [...navLinks].map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const navIO = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    const idx = sections.indexOf(e.target);
+    if (idx !== -1 && e.isIntersecting) {
+      navLinks.forEach(l => l.classList.remove('active'));
+      navLinks[idx].classList.add('active');
+    }
+  });
+}, { threshold: 0.2 });
+sections.forEach(s => navIO.observe(s));
+</script>
+
+</body>
+</html>

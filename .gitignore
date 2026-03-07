@@ -14,7 +14,6 @@ weights/*.safetensors
 third_party/Video-Depth-Anything/checkpoints/
 
 # Temp files
-*.mp4
 /tmp/
 .DS_Store
 
