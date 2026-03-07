@@ -21,3 +21,5 @@ third_party/Video-Depth-Anything/checkpoints/
 # IDE
 .vscode/
 .idea/
+save_prompt_cache.py
+

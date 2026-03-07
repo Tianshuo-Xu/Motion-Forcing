@@ -14,8 +14,7 @@ Motion-Forcing/
 │   ├── pipeline.py             # CogVideoXImageToVideoPipeline (two-stage denoising)
 │   ├── cogvideox_transformer_MD.py  # CogVideoXTransformer3DModel (motion-forcing)
 │   └── normalization.py        # Custom norm layers
-├── third_party/
-│   └── Video-Depth-Anything/   # Depth estimation (git submodule)
+├── Video-Depth-Anything/   # Depth estimation (git submodule)
 ├── weights/
 │   └── yolo11l-seg.pt          # YOLO segmentation weights (download manually)
 ├── requirements.txt

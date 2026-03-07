@@ -67,7 +67,7 @@ from models.pipeline import CogVideoXImageToVideoPipeline
 from vggt.models.vggt import VGGT
 from vggt.utils.pose_enc import pose_encoding_to_extri_intri
 
-_VDA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), 'third_party', 'Video-Depth-Anything'))
+_VDA_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), 'Video-Depth-Anything'))
 if _VDA_ROOT not in sys.path:
     sys.path.insert(0, _VDA_ROOT)
 for _pkg in ['video_depth_anything', 'video_depth_anything/motion_module', 'video_depth_anything/util', 'utils']:
@@ -236,13 +236,15 @@ def _load_pipeline_components(model_path, dtype):
     """
     from transformers import T5Tokenizer
 
-    print("  Loading tokenizer ...")
-    tokenizer = T5Tokenizer.from_pretrained(model_path, subfolder="tokenizer")
-
-    print("  Loading text_encoder ...")
-    text_encoder = T5EncoderModel.from_pretrained(
-        model_path, subfolder="text_encoder", torch_dtype=dtype
-    )
+    # print("  Loading tokenizer ...")
+    # tokenizer = T5Tokenizer.from_pretrained(model_path, subfolder="tokenizer")
+    # print("  Loading text_encoder ...")
+    # text_encoder = T5EncoderModel.from_pretrained(
+    #     model_path, subfolder="text_encoder", torch_dtype=dtype
+    # )
+    print("  Skipping tokenizer & text_encoder (using cached prompt embeddings) ...")
+    tokenizer = None
+    text_encoder = None
 
     print("  Loading VAE ...")
     vae = AutoencoderKLCogVideoX.from_pretrained(
@@ -395,7 +397,7 @@ def load_models(args):
     vda_config = {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]}
     depth_model = VideoDepthAnything(**vda_config)
     vda_ckpt = os.path.join(
-        os.path.dirname(__file__), 'third_party',
+        os.path.dirname(__file__),
         'Video-Depth-Anything', 'checkpoints', 'video_depth_anything_vits.pth'
     )
     if os.path.exists(vda_ckpt):
@@ -1349,18 +1351,41 @@ def generate_video(
     """
     generator = torch.Generator(device="cpu").manual_seed(seed)
 
-    video_frames = pipe(
-        num_frames=num_frames,
-        height=TARGET_HEIGHT,
-        width=TARGET_WIDTH,
-        prompt=prompt,
-        image=image_input,
-        latent_point=latent_point,
-        latent_camera_depth=latent_camera_depth,
-        generator=generator,
-        num_inference_steps=num_inference_steps,
-        guidance_scale=guidance_scale,
-    ).frames[0]
+    # Load cached prompt embeddings instead of using raw string prompt
+    embeds_path = os.path.join(os.path.dirname(__file__), "prompt_embeds.pt")
+    if os.path.exists(embeds_path):
+        cached_embeds = torch.load(embeds_path)
+        prompt_embeds = cached_embeds["prompt_embeds"].to(pipe.device, dtype=pipe.transformer.dtype)
+        negative_prompt_embeds = cached_embeds["negative_prompt_embeds"].to(pipe.device, dtype=pipe.transformer.dtype)
+        
+        video_frames = pipe(
+            num_frames=num_frames,
+            height=TARGET_HEIGHT,
+            width=TARGET_WIDTH,
+            prompt=None,
+            prompt_embeds=prompt_embeds,
+            negative_prompt_embeds=negative_prompt_embeds,
+            image=image_input,
+            latent_point=latent_point,
+            latent_camera_depth=latent_camera_depth,
+            generator=generator,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+        ).frames[0]
+    else:
+        # Fallback to string prompt if cache not found
+        video_frames = pipe(
+            num_frames=num_frames,
+            height=TARGET_HEIGHT,
+            width=TARGET_WIDTH,
+            prompt=prompt,
+            image=image_input,
+            latent_point=latent_point,
+            latent_camera_depth=latent_camera_depth,
+            generator=generator,
+            num_inference_steps=num_inference_steps,
+            guidance_scale=guidance_scale,
+        ).frames[0]
 
     return video_frames
 
