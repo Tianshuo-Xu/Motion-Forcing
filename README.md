@@ -20,37 +20,39 @@ Motion Forcing decouples physical reasoning from visual synthesis via a hierarch
 
 ### Driving Ego-Action Control
 
-<table>
-  <tr>
-    <td align="center"><b>Turn Left</b></td>
-    <td align="center"><b>Turn Right</b></td>
-    <td align="center"><b>Speed Up</b></td>
-    <td align="center"><b>Slow Down</b></td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-left.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-right.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-fast.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-slow.mp4" width="180"></td>
-  </tr>
-</table>
+**Turn Left**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-left.mp4
+
+**Turn Right**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-right.mp4
+
+**Speed Up**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-fast.mp4
+
+**Slow Down**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-slow.mp4
 
 ### Complex Driving Scenarios
 
-<table>
-  <tr>
-    <td align="center"><b>Dangerous Cut-In</b></td>
-    <td align="center"><b>Double Cut-In</b></td>
-    <td align="center"><b>Right Cut-In</b></td>
-    <td align="center"><b>Left Cut-In & Brake</b></td>
-  </tr>
-  <tr>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-dangerous-cut-in-trend.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-double-cut-in.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-right-cut-in.mp4" width="180"></td>
-    <td><img src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-left-cut-in-and-brake.mp4" width="180"></td>
-  </tr>
-</table>
+**Dangerous Cut-In**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-dangerous-cut-in-trend.mp4
+
+**Double Cut-In**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-double-cut-in.mp4
+
+**Right Cut-In**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-right-cut-in.mp4
+
+**Left Cut-In & Brake**
+
+https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-left-cut-in-and-brake.mp4
 
 ---
 
