@@ -1,0 +1,23 @@
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Model weights (large files, download separately)
+weights/*.pt
+weights/*.pth
+weights/*.bin
+weights/*.safetensors
+third_party/Video-Depth-Anything/checkpoints/
+
+# Temp files
+*.mp4
+/tmp/
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,17 @@
+torch>=2.5.0
+torchvision>=0.20.0
+diffusers>=0.32.1
+transformers>=4.46.2
+accelerate>=1.1.1
+gradio>=5.5.0
+numpy==1.26.0
+opencv-python>=4.8.0
+Pillow>=10.0.0
+scipy>=1.11.0
+ultralytics>=8.0.0
+safetensors>=0.4.0
+huggingface_hub>=0.20.0
+imageio>=2.35.1
+imageio-ffmpeg>=0.5.1
+sentencepiece>=0.2.0
+vggt
