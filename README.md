@@ -28,10 +28,10 @@ Motion Forcing decouples physical reasoning from visual synthesis via a hierarch
     <td align="center"><b>Slow Down</b></td>
   </tr>
   <tr>
-    <td><video src="assets/Videos/driving_ego_action/ours-left.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/driving_ego_action/ours-right.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/driving_ego_action/ours-fast.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/driving_ego_action/ours-slow.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-left.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-right.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-fast.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-slow.mp4" autoplay muted loop playsinline width="180"></video></td>
   </tr>
 </table>
 
@@ -45,10 +45,10 @@ Motion Forcing decouples physical reasoning from visual synthesis via a hierarch
     <td align="center"><b>Left Cut-In & Brake</b></td>
   </tr>
   <tr>
-    <td><video src="assets/Videos/more_driving_scene1/ours-dangerous-cut-in-trend.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/more_driving_scene1/ours-double-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/more_driving_scene1/ours-right-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
-    <td><video src="assets/Videos/more_driving_scene1/ours-left-cut-in-and-brake.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-dangerous-cut-in-trend.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-double-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-right-cut-in.mp4" autoplay muted loop playsinline width="180"></video></td>
+    <td><video src="https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-left-cut-in-and-brake.mp4" autoplay muted loop playsinline width="180"></video></td>
   </tr>
 </table>
 
