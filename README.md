@@ -2,7 +2,7 @@
 
 # Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics
 
-[![arXiv](https://img.shields.io/badge/arXiv-Paper-red?logo=arxiv)](https://arxiv.org/abs/XXXX.XXXXX)
+[![arXiv](https://img.shields.io/badge/arXiv-Paper-red?logo=arxiv)](https://arxiv.org/abs/2603.10408)
 [![Project Page](https://img.shields.io/badge/Project-Page-blue?logo=googlechrome)](https://tianshuo-xu.github.io/Motion-Forcing/)
 [![HuggingFace](https://img.shields.io/badge/%F0%9F%A4%97-Model-yellow)](https://huggingface.co/TSXu/MotionForcing_driving)
 
@@ -20,39 +20,15 @@ Motion Forcing decouples physical reasoning from visual synthesis via a hierarch
 
 ### Driving Ego-Action Control
 
-**Turn Left**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-left.mp4
-
-**Turn Right**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-right.mp4
-
-**Speed Up**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-fast.mp4
-
-**Slow Down**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-slow.mp4
+| Turn Left | Turn Right | Speed Up | Slow Down |
+|:---------:|:----------:|:--------:|:---------:|
+| [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-left.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-right.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-fast.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/driving_ego_action--ours-slow.mp4) |
 
 ### Complex Driving Scenarios
 
-**Dangerous Cut-In**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-dangerous-cut-in-trend.mp4
-
-**Double Cut-In**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-double-cut-in.mp4
-
-**Right Cut-In**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-right-cut-in.mp4
-
-**Left Cut-In & Brake**
-
-https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-left-cut-in-and-brake.mp4
+| Dangerous Cut-In | Double Cut-In | Right Cut-In | Left Cut-In & Brake |
+|:----------------:|:-------------:|:------------:|:-------------------:|
+| [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-dangerous-cut-in-trend.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-double-cut-in.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-right-cut-in.mp4) | [▶ video](https://github.com/Tianshuo-Xu/Motion-Forcing/releases/download/v0.1-assets/more_driving_scene1--ours-left-cut-in-and-brake.mp4) |
 
 ---
 
@@ -115,10 +91,13 @@ We thank the authors of [CogVideoX](https://github.com/THUDM/CogVideo), [Video-D
 ## Citation
 
 ```bibtex
-@inproceedings{xu2026motionforcing,
-  title     = {Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics},
-  author    = {Xu, Tianshuo and Chen, Zhifei and Wu, Leyi and Lu, Hao and Chen, Ying-cong},
-  booktitle = {arXiv},
-  year      = {2026}
+@misc{xu2026motion,
+      title={Motion Forcing: A Decoupled Framework for Robust Video Generation in Motion Dynamics}, 
+      author={Tianshuo Xu and Zhifei Chen and Leyi Wu and Hao Lu and Ying-cong Chen},
+      year={2026},
+      eprint={2603.10408},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2603.10408}, 
 }
 ```
